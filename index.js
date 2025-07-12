@@ -2,23 +2,10 @@ const { Client, GatewayIntentBits, Partials, ChannelType, EmbedBuilder } = requi
 
 const client = new Client({
     intents: [
-        GatewayIntentBits.Guilds,
-        GatewayIntentBits.GuildMembers,
-        GatewayIntentBits.GuildBans,
-        GatewayIntentBits.GuildEmojisAndStickers,
-        GatewayIntentBits.GuildIntegrations,
-        GatewayIntentBits.GuildWebhooks,
-        GatewayIntentBits.GuildInvites,
-        GatewayIntentBits.GuildVoiceStates,
-        GatewayIntentBits.GuildPresences,
-        GatewayIntentBits.GuildMessages,
-        GatewayIntentBits.GuildMessageReactions,
-        GatewayIntentBits.GuildMessageTyping,
-        GatewayIntentBits.DirectMessages,
-        GatewayIntentBits.DirectMessageReactions,
-        GatewayIntentBits.DirectMessageTyping,
-        GatewayIntentBits.MessageContent,
-        GatewayIntentBits.GuildScheduledEvents,
+        GatewayIntentBits.Guilds, // ギルド関連のイベントを購読するために必須
+        GatewayIntentBits.GuildMembers, // メンバーの参加・脱退イベントに必須
+        GatewayIntentBits.GuildMessages, // EmbedBuilderを使用するためにメッセージ関連のインテントが必要
+        GatewayIntentBits.MessageContent, // メッセージの内容を読み取る場合（現在は不要だが、将来的な拡張を考慮）
     ],
     partials: [
         Partials.User,
@@ -31,41 +18,41 @@ const client = new Client({
     ],
 });
 
-client.login(process.env.TOKEN);
-
-
+client.login(process.env.TOKEN)
 
 client.on('guildMemberAdd', async (member) => {
-
     const gateChannelId = process.env.GATE_CHANNEL_ID;
-    const channel = member.guild.channels.cache.get(gateChannelId);
 
     if (!gateChannelId) return;
-    if (!channel || channel.type !== ChannelType.GuildText) return;
 
-    const embed = new EmbedBuilder()
+    const channel = member.guild.channels.cache.get(gateChannelId);
+
+    if (!channel || channel.type !== ChannelType.GuildText) return
+
+    const joinEmbed = new EmbedBuilder()
         .setColor(0x00FF00)
-        .setAuthor({ name: "+ 参加", iconURL: member.guild.iconURL() })
+        .setAuthor({ name: "+ 参加", iconURL: member.guild.iconURL({ dynamic: true }) || undefined })
         .setDescription(`**${member.user.tag}** がサーバーに参加しました！`)
-        .setTimestamp()
+        .setTimestamp();
 
-    await channel.send({ embeds: [embed] });
-    await member.roles.add("875969584996446260")
-})
+    await channel.send({ embeds: [joinEmbed] });
+
+});
 
 client.on('guildMemberRemove', async (member) => {
-
     const gateChannelId = process.env.GATE_CHANNEL_ID;
+
+    if (!gateChannelId) console.warn('GATE_CHANNEL_IDが設定されていません。メンバー脱退通知は送信されません。');
+
     const channel = member.guild.channels.cache.get(gateChannelId);
 
-    if (!gateChannelId) return;
     if (!channel || channel.type !== ChannelType.GuildText) return;
 
-    const embed = new EmbedBuilder()
+    const leaveEmbed = new EmbedBuilder()
         .setColor(0xFF0000)
-        .setAuthor({ name: "- 脱退", iconURL: member.guild.iconURL() })
+        .setAuthor({ name: "- 脱退", iconURL: member.guild.iconURL({ dynamic: true }) || undefined })
         .setDescription(`**${member.user.tag}** がサーバーを退出しました。`)
-        .setTimestamp()
+        .setTimestamp();
 
-    await channel.send({ embeds: [embed] });
-})
+    await channel.send({ embeds: [leaveEmbed] });
+});
