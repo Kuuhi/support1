@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits, Partials, ChannelType, EmbedBuilder } = require('discord.js');
+const { Client, GatewayIntentBits, Partials, ChannelType, EmbedBuilder, messageLink } = require('discord.js');
 
 const client = new Client({
     intents: [
@@ -23,6 +23,9 @@ require('dotenv').config();
 client.login(process.env.TOKEN)
 
 client.on('guildMemberAdd', async (member) => {
+
+    if (member.guild.id !== process.env.GUILD_ID) return
+
     const gateChannelId = process.env.GATE_CHANNEL_ID;
 
     if (!gateChannelId) return;
@@ -42,6 +45,9 @@ client.on('guildMemberAdd', async (member) => {
 });
 
 client.on('guildMemberRemove', async (member) => {
+
+    if (member.guild.id !== process.env.GUILD_ID) return
+
     const gateChannelId = process.env.GATE_CHANNEL_ID;
 
     if (!gateChannelId) console.warn('GATE_CHANNEL_IDが設定されていません。メンバー脱退通知は送信されません。');
